@@ -24,4 +24,13 @@ pipeline
             }
         }
     }
+    post {
+        always {
+            // Cleanup: Stop and remove Docker containers after pipeline execution
+            script {
+                sh "docker stop \$(docker ps -aq --filter ancestor=pipeline)"
+                sh "docker rm \$(docker ps -aq --filter ancestor=pipeline)"
+            }
+        }
+    }
 }
