@@ -10,7 +10,7 @@ pipeline
             {
                 script
                 {
-                    sh "docker build -t ."
+                    sh "docker build -t pipeline ."
                 }
             }
         }
