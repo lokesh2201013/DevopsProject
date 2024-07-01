@@ -13,7 +13,7 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    bat "kubectl apply -f deployment.yaml"
+                    bat "kubectl apply -f new.yml"
                 }
             }
         }
