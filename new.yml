@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pipeline
+spec:
+  selector:
+    matchLabels:
+      app: pipeline
+  template:
+    metadata:
+      labels:
+        app: pipeline
+    spec:
+      containers:
+      - name: myapp
+        image: lokesh220/pipeline
+        ports:
+        - containerPort: 5173
