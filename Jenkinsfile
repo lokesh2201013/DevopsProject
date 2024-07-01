@@ -32,6 +32,7 @@ pipeline {
             script {
                 bat 'docker stop pipeline'
                 bat 'docker rm pipeline'
+                mail(to: 'lokeshchoraria60369@gmail.com', body: 'The body')
             }
         }
     }
