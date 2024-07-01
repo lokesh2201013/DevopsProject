@@ -43,7 +43,7 @@ pipeline {
             steps {
                 script {
                     // Apply Kubernetes configuration
-                    bat "kubectl apply -f new.yml"
+                    bat "kubectl apply -f new.yml --validate=false"
                 }
             }
         }
