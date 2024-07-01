@@ -1,28 +1,57 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_CREDENTIALS_ID = 'dockercred' // Replace with your Docker credentials ID in Jenkins
+        DOCKERHUB_REPO = 'lokesh220/pipeline'
+    }
+
     stages {
         stage('Build Image') {
             steps {
                 script {
+                    // Build Docker image
                     bat "docker build -t pipeline ."
                 }
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Tag Image') {
             steps {
                 script {
-                    bat "kubectl apply -f new.yml"
+                    // Tag the Docker image
+                    bat "docker tag pipeline ${DOCKERHUB_REPO}:latest"
                 }
             }
         }
+
+        stage('Push Image') {
+            steps {
+                script {
+                    // Login to Docker Hub
+                    withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        bat "docker login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD%"
+                    }
+                    // Push the Docker image to Docker Hub
+                    bat "docker push ${DOCKERHUB_REPO}:latest"
+                }
+            }
+        }
+
+        /*stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    // Apply Kubernetes configuration
+                    bat "kubectl apply -f new.yml"
+                }
+            }
+        }*/
 
         stage('Run Container at port 5173') {
             steps {
                 script {
                     // Run Docker container
-                    bat "docker run -d -p 5173:5173 --name pipeline lokesh220/pipeline:latest"
+                    bat "docker run -d -p 5173:5173 --name pipeline ${DOCKERHUB_REPO}:latest"
                 }
             }
         }
