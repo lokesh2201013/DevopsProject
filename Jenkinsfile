@@ -22,8 +22,8 @@ pipeline {
     post {
         always {
             script {
-                bat "docker stop $(docker ps -q -l --filter ancestor=pipeline)"
-                bat "docker rm \$(docker ps -q -l --filter ancestor=pipeline)"
+                bat 'docker stop $("docker ps -q -l --filter ancestor=pipeline")'
+                bat 'docker rm $("docker ps -q -l --filter ancestor=pipeline")'
             }
         }
     }
