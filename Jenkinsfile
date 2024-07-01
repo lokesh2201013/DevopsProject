@@ -10,21 +10,19 @@ pipeline {
             }
         }
 
-        /*stage('Scan Image with Trivy') {
+        stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    bat "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-aquasec/trivy:latest image pipeline:latest \
-    --severity HIGH,CRITICAL,MEDIUM \
-    --format json"
+                    bat "kubectl apply -f deployment.yaml"
                 }
             }
-        }*/
+        }
 
         stage('Run Container at port 5173') {
             steps {
                 script {
-                    bat "docker run -d -p 5173:5173 --name pipeline pipeline:latest"
+                    // Run Docker container
+                    bat "docker run -d -p 5173:5173 --name pipeline lokesh220/pipeline:latest"
                 }
             }
         }
@@ -33,9 +31,12 @@ aquasec/trivy:latest image pipeline:latest \
     post {
         always {
             script {
+                // Stop and remove Docker container
                 bat 'docker stop pipeline'
                 bat 'docker rm pipeline'
-                 mail to: 'lokeshchoraria60369@gmail.com', subject: 'Build Status', body: 'The build has completed.'
+                
+                // Send email notification
+                mail to: 'lokeshchoraria60369@gmail.com', subject: 'Build Status', body: 'The build has completed.'
             }
         }
     }
