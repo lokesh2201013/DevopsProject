@@ -21,6 +21,7 @@ pipeline {
                 script {
                     // Tag the Docker image
                     bat "docker tag pipeline ${DOCKERHUB_REPO}:latest"
+
                 }
             }
         }
