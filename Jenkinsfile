@@ -22,11 +22,13 @@ pipeline {
     post {
         always {
             script {
-               def dockerContainers = bat(script: 'docker ps -aq --filter ancestor=pipeline', returnStdout: true).trim()
+                def dockerContainers = bat(script: 'docker ps -aq --filter ancestor=pipeline', returnStdout: true).trim()
                     
-                    dockerContainers.readLines().each { containerId ->
-                        bat "docker stop ${containerId}"
+                dockerContainers.readLines().each { containerId ->
+                    bat "docker stop ${containerId}"
+                }
             }
         }
     }
 }
+
