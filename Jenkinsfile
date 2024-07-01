@@ -10,10 +10,18 @@ pipeline {
             }
         }
 
+        stage('Scan Image with Trivy') {
+            steps {
+                script {
+                    bat "docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image pipeline:latest --scanners vuln"
+                }
+            }
+        }
+
         stage('Run Container at port 5173') {
             steps {
                 script {
-                    bat "docker run -d -p 5173:5173 --name pipeline pipeline"
+                    bat "docker run -d -p 5173:5173 --name pipeline pipeline:latest"
                 }
             }
         }
