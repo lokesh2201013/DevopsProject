@@ -39,11 +39,11 @@ pipeline {
             }
         }
 
-        /*stage('Deploy to Kubernetes') {
+      /*  stage('Deploy to Kubernetes') {
             steps {
                 script {
                     // Apply Kubernetes configuration
-                    bat "kubectl apply -f new.yml"
+                    bat "kubectl apply -f new.yml --validate=false"
                 }
             }
         }*/
