@@ -21,7 +21,6 @@ pipeline {
                 script {
                     // Tag the Docker image
                     bat "docker tag pipeline ${DOCKERHUB_REPO}:latest"
-
                 }
             }
         }
@@ -39,15 +38,6 @@ pipeline {
             }
         }
 
-      /*  stage('Deploy to Kubernetes') {
-            steps {
-                script {
-                    // Apply Kubernetes configuration
-                    bat "kubectl apply -f new.yml --validate=false"
-                }
-            }
-        }*/
-
         stage('Run Container at port 5173') {
             steps {
                 script {
@@ -61,12 +51,15 @@ pipeline {
     post {
         always {
             script {
-                // Stop and remove Docker container
+                
                 bat 'docker stop pipeline'
                 bat 'docker rm pipeline'
                 
-                // Send email notification
+               
                 mail to: 'lokeshchoraria60369@gmail.com', subject: 'Build Status', body: 'The build has completed.'
+
+              
+                bat 'minikube start'
             }
         }
     }
