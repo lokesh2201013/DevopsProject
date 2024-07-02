@@ -39,14 +39,14 @@ pipeline {
             }
         }
 
-        stage('Deploy to Kubernetes') {
+      /*  stage('Deploy to Kubernetes') {
             steps {
                 script {
                     // Apply Kubernetes configuration
                     bat "kubectl apply -f new.yml --validate=false"
                 }
             }
-        }
+        }*/
 
         stage('Run Container at port 5173') {
             steps {
