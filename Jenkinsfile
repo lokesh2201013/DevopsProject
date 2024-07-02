@@ -52,7 +52,7 @@ pipeline {
             steps {
                 script {
                     // Run Docker container
-                    bat "docker run -d -p 5173:5173 --name pipeline ${DOCKERHUB_REPO}:latest"
+                    bat "docker run -d -p 5173:80 --name pipeline ${DOCKERHUB_REPO}:latest"
                 }
             }
         }

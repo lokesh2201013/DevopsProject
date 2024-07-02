@@ -12,7 +12,7 @@ spec:
         app: pipeline
     spec:
       containers:
-      - name: myapp
+      - name: pipeline
         image: lokesh220/pipeline
         ports:
         - containerPort: 5173
