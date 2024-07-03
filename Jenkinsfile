@@ -56,7 +56,7 @@ pipeline {
 println "Cluster status: ${result}"
 
                 
-                if (result == "not exists") {
+                if (result != 0) {
                     // Create Kind cluster if it does not exist
                     bat 'kind create cluster --name new'
                 }
