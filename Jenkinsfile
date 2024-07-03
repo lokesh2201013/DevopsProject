@@ -80,26 +80,9 @@ pipeline {
                     def podsready=false
                     def maxtries=30
                     def retry=60
-                    for( int i=0 ; i<maxtries ;i++)
-                    {
-                        def podStatus = bat(script:'kubectl get pods -n argocd --field-selector=status.phase=Running', returnStatus: true)
-                        if(podStatus==0)
-                        {
-                            echo "Argocd ready"
-                            podsready=true
-                            break
-                        }
-                        else{
-                              echo "Waiting for pods to be ready in Argo CD namespace..."
-                        sleep retry
-                        }
-
-                    }
-                      if (!podsready) {
-                    error "Timed out waiting for pods to be ready in Argo CD namespace."
-                }
+                sleep 120
                  
-                // Set current context to the Argo CD namespace (if needed)
+               
                 bat 'kubectl config set-context --current --namespace=argocd'
                  bat ' C:/Users/lokes/argocd.exe login cd.argoproj.io --core'
                 // Create or update Argo CD application
@@ -108,21 +91,7 @@ pipeline {
                 def maxRetries = 30
                 def retryInterval = 60 // seconds
 
-                for (int i = 0; i < maxRetries; i++) {
-                    def podStatus = bat(script: 'kubectl get pods -n default --field-selector=status.phase=Running | findstr "pipeline"', returnStatus: true)
-                    if (podStatus == 0) {
-                        echo "Pipeline pod in default namespace is ready."
-                        podsReady = true
-                        break
-                    } else {
-                        echo "Waiting for pipeline pod to be ready in default namespace..."
-                        sleep retryInterval
-                    }
-                }
-
-                if (!podsReady) {
-                    error "Timed out waiting for pipeline pod to be ready in default namespace."
-                }
+              sleep 60
 
                 // Sync Argo CD application
                 bat 'C:/Users/lokes/argocd.exe app sync pipeline'
