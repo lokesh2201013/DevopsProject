@@ -60,6 +60,7 @@ pipeline {
 
               
                 bat ' kind create cluster --name new'
+                bat 'kubectl get pods'
             }
         }
     }
