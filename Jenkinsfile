@@ -65,13 +65,21 @@ pipeline {
                 } else {
                     echo "Kind cluster 'new' exists."
                 }
+
+                // Apply Kubernetes configuration
                 bat 'kubectl apply -f kubeconfig/new.yml'
-                sleep 30
+                sleep time: 30, unit: 'SECONDS'  // Wait for Kubernetes resources to be ready
 
-                // Retrieve the pod name running app=pipeline
-              def podName = bat(script: "kubectl get pod -l app=pipeline -o jsonpath='{.items[0].metadata.name}'", returnStdout: true).trim()
-                    bat "kubectl port-forward $podName 5173:80 -n default"
+                // Retrieve the pod name running app=pipeline without using -l flag
+                def podName = bat(script: 'kubectl get pods -o json | jq -r \'.items[] | select(.metadata.labels.app == "pipeline") | .metadata.name\'', returnStdout: true).trim()
 
+                // Port forward to the pod
+                bat "kubectl port-forward $podName 5173:80 -n default &"
+
+                // Wait briefly for port forwarding to start
+                sleep time: 10, unit: 'SECONDS'
+
+                // Check deployments in default namespace
                 bat 'kubectl get deployments -n default'
 
                 // Send email notification
