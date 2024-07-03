@@ -99,6 +99,7 @@ pipeline {
 
                 // Check deployments in the default namespace
                 bat 'kubectl get deployments -n default'
+                bat "echo Current directory: && cd"
               def powershellStatus = powershell script: '''
                     Start-Process -NoNewWindow -FilePath "kubectl" -ArgumentList "port-forward deployment/pipeline 5173:80 -n default" -PassThru
                 ''', returnStatus: true
