@@ -77,10 +77,12 @@ pipeline {
                 } else {
                     echo "Argo CD namespace exists."
                 }
-
-                // Check pods in the Kubernetes cluster
+                bat ' kubectl config set-context --current --namespace=argocd'
+                bat './argocd app create pipeline --repo https://github.com/lokesh2201013/DevopsProject --path kubeconfig --dest-server https://kubernetes.default.svc --dest-namespace default'
+                bat './argocd app sync pipeline'
+              
                 bat 'kubectl get pods -n argocd'
-
+                bat 'kubectl get deployments -n default'
                 // Send email notification
                 mail to: 'lokeshchoraria60369@gmail.com', subject: 'Build Status', body: 'The build has completed.'
             }
