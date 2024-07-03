@@ -65,34 +65,13 @@ pipeline {
                 } else {
                     echo "Kind cluster 'new' exists."
                 }
+                bat 'kubectl apply -f kubeconfig/new.yml'
+                sleep 60
+                 def podName = bat(script: 'kubectl get pods -l app=pipeline -o jsonpath="{.items[0].metadata.name}"', returnStdout: true).trim()
+                bat 'kubectl port-forward ${podName} 5173:80 -n default'
 
-                // Check if the Argo CD namespace exists
-                def argoExists = bat(script: 'kubectl get namespace argocd > nul 2>&1 && echo exists || echo not exists', returnStatus: true)
-                println "Argo CD namespace status: ${argoExists}"
-
-                if (argoExists != 0) {
-                    echo "Argo CD namespace does not exist. Creating..."
-                    bat 'kubectl create namespace argocd'
-                    bat 'kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml'
-                } else {
-                    echo "Argo CD namespace exists."
-                }
-
-                // Set current context to the Argo CD namespace (if needed)
-                bat 'kubectl config set-context --current --namespace=argocd'
-                 bat ' C:/Users/lokes/argocd.exe login cd.argoproj.io --core'
-                // Create or update Argo CD application
-                bat 'C:/Users/lokes/argocd.exe app create pipeline --repo https://github.com/lokesh2201013/DevopsProject --path kubeconfig --dest-server https://kubernetes.default.svc --dest-namespace default'
-
-                // Sync Argo CD application
-                bat 'C:/Users/lokes/argocd.exe app sync pipeline'
-
-                // Check pods in the Argo CD namespace
-                bat 'kubectl get pods -n argocd'
-
-                // Check deployments in the default namespace
                 bat 'kubectl get deployments -n default'
-
+                
                 // Send email notification
                 mail to: 'lokeshchoraria60369@gmail.com', subject: 'Build Status', body: 'The build has completed.'
             }
