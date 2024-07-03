@@ -59,7 +59,7 @@ pipeline {
                 mail to: 'lokeshchoraria60369@gmail.com', subject: 'Build Status', body: 'The build has completed.'
 
               
-                bat ' minikube start --extra-config=apiserver.enable-admission-plugins=""'
+                bat ' kind create cluster --name new'
             }
         }
     }
