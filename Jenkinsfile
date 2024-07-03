@@ -109,7 +109,7 @@ pipeline {
                 def retryInterval = 60 // seconds
 
                 for (int i = 0; i < maxRetries; i++) {
-                    def podStatus = sh(script: 'kubectl get pods -n default --field-selector=status.phase=Running | findstr "pipeline"', returnStatus: true)
+                    def podStatus = bat(script: 'kubectl get pods -n default --field-selector=status.phase=Running | findstr "pipeline"', returnStatus: true)
                     if (podStatus == 0) {
                         echo "Pipeline pod in default namespace is ready."
                         podsReady = true
