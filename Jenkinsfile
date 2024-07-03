@@ -91,17 +91,15 @@ pipeline {
                 def maxRetries = 30
                 def retryInterval = 60 // seconds
 
-              sleep 60
-
                 // Sync Argo CD application
                 bat 'C:/Users/lokes/argocd.exe app sync pipeline'
-
+                     sleep 60
                 // Check pods in the Argo CD namespace
                 bat 'kubectl get pods -n argocd'
 
                 // Check deployments in the default namespace
                 bat 'kubectl get deployments -n default'
-
+              
                 // Send email notification
                 mail to: 'lokeshchoraria60369@gmail.com', subject: 'Build Status', body: 'The build has completed.'
             }
