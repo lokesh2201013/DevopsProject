@@ -99,7 +99,9 @@ pipeline {
 
                 // Check deployments in the default namespace
                 bat 'kubectl get deployments -n default'
-                bat 'kubectl port-forward deployment/pipeline 5173:80 -n default'
+               powershell '''
+                        Start-Process powershell -ArgumentList "kubectl port-forward deployment/pipeline 5173:80 -n default" -NoNewWindow
+                    '''
 
                 // Send email notification
                 mail to: 'lokeshchoraria60369@gmail.com', subject: 'Build Status', body: 'The build has completed.'
