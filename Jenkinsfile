@@ -61,6 +61,8 @@ pipeline {
                 } else {
                     echo "Kind cluster 'new' exists."
                 }
+    bat 'kubectl config view --minify --flatten > kubeconfig.yaml'
+
 
                 // Clean up Docker containers
                 bat 'docker stop pipeline'
