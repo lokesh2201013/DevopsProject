@@ -4,6 +4,12 @@ pipeline {
     environment {
         DOCKER_CREDENTIALS_ID = 'dockercred'
         DOCKERHUB_REPO = 'lokesh220/pipeline'
+        KIND_CLUSTER_NAME = 'new'
+        ARGOCD_CLI_PATH = 'C:/Users/lokes/argocd.exe'
+        REPO_URL = 'https://github.com/lokesh2201013/DevopsProject'
+        KUBECONFIG_PATH = 'kubeconfig'
+        DEST_SERVER = 'https://kubernetes.default.svc'
+        DEST_NAMESPACE = 'default'
     }
 
     stages {
@@ -46,53 +52,58 @@ pipeline {
                 }
             }
         }
-    }
 
-    post {
-        always {
-            script {
-                // Clean up Docker containers
-                bat 'docker stop pipeline'
-                bat 'docker rm pipeline'
-
-                // Check if Kind cluster "new" exists
-                def result = bat(script: 'kind get clusters | findstr "new" > nul && echo exists || echo not exists', returnStatus: true)
-                println "Cluster status: ${result}"
-
-                if (result != 0) {
-                    echo "Kind cluster 'new' does not exist. Creating..."
-                    bat 'kind create cluster --name new'
-                } else {
-                    echo "Kind cluster 'new' exists."
+        stage('Cleanup Docker') {
+            steps {
+                script {
+                    // Clean up Docker containers
+                    bat 'docker stop pipeline'
+                    bat 'docker rm pipeline'
                 }
+            }
+        }
 
-                // Apply Kubernetes configuration
-                bat 'kubectl apply -f kubeconfig/new.yml'
-                sleep time: 30, unit: 'SECONDS'  // Wait for Kubernetes resources to be ready
+        stage('Check Kind Cluster') {
+            steps {
+                script {
+                    // Check if Kind cluster "new" exists
+                    def result = bat(script: 'kind get clusters | findstr "new" > nul && echo exists || echo not exists', returnStatus: true)
+                    echo "Cluster status: ${result}"
+                    if (result != 0) {
+                        echo "Kind cluster 'new' does not exist. Creating..."
+                        bat 'kind create cluster --name new'
+                    } else {
+                        echo "Kind cluster 'new' exists."
+                    }
+                }
+            }
+        }
 
-                // Retrieve the pod name running app=pipeline without using -l flag
-                def podsJson = bat(script: 'kubectl get pods -o json', returnStdout: true).trim()
-                def podName = parsePodNameFromJson(podsJson)
+        stage('Argo CD Integration') {
+            steps {
+                script {
+                    // Login to Argo CD
+                    bat "${ARGOCD_CLI_PATH} login cd.argoproj.io --core"
 
-                // Port forward to the pod
-                bat "kubectl port-forward $podName 5173:80 -n default &"
+                    // Create or sync Argo CD application
+                    bat "${ARGOCD_CLI_PATH} app create pipeline --repo ${REPO_URL} --path ${KUBECONFIG_PATH} --dest-server ${DEST_SERVER} --dest-namespace ${DEST_NAMESPACE}"
+                    bat "${ARGOCD_CLI_PATH} app sync pipeline"
+                }
+            }
+        }
 
-                // Wait briefly for port forwarding to start
-                sleep time: 10, unit: 'SECONDS'
+        stage('Final Cleanup and Notification') {
+            steps {
+                script {
+                    // Additional cleanup or notifications
+                    echo 'Performing final cleanup and notification steps...'
+                    
+                    // Example: Send email notification
+                    mail to: 'lokeshchoraria60369@gmail.com', subject: 'Pipeline Build Status', body: 'The pipeline build has completed successfully.'
 
-                // Check deployments in default namespace
-                bat 'kubectl get deployments -n default'
-
-                // Send email notification
-                mail to: 'lokeshchoraria60369@gmail.com', subject: 'Build Status', body: 'The build has completed.'
+                    // Example: Any other cleanup steps if needed
+                }
             }
         }
     }
-}
-
-def parsePodNameFromJson(String podsJson) {
-    def jsonSlurper = new JsonSlurperClassic()
-    def json = jsonSlurper.parseText(podsJson)
-    def podName = json.items.find { it.metadata.labels.app == 'pipeline' }?.metadata.name
-    return podName ?: ''
 }
