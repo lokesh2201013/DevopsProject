@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_CREDENTIALS_ID = 'dockercred' // Replace with your Docker credentials ID in Jenkins
+        DOCKER_CREDENTIALS_ID = 'dockercred'
         DOCKERHUB_REPO = 'lokesh220/pipeline'
     }
 
@@ -51,6 +51,10 @@ pipeline {
     post {
         always {
             script {
+                // Clean up Docker containers
+                bat 'docker stop pipeline'
+                bat 'docker rm pipeline'
+
                 // Check if Kind cluster "new" exists
                 def result = bat(script: 'kind get clusters | findstr "new" > nul && echo exists || echo not exists', returnStatus: true)
                 println "Cluster status: ${result}"
@@ -61,10 +65,6 @@ pipeline {
                 } else {
                     echo "Kind cluster 'new' exists."
                 }
-
-                // Clean up Docker containers
-                bat 'docker stop pipeline'
-                bat 'docker rm pipeline'
 
                 // Check if the Argo CD namespace exists
                 def argoExists = bat(script: 'kubectl get namespace argocd > nul 2>&1 && echo exists || echo not exists', returnStatus: true)
@@ -77,14 +77,21 @@ pipeline {
                 } else {
                     echo "Argo CD namespace exists."
                 }
-                 def podReady = waitReady('default','app=pipeline' ,10)
-                 if(podReady)
-                 {
-                    echo "Pods present"
-                    bat 'kubectl run ${podname} --image=${DOCKERHUB_REPO} --'
-                 }
-                // Check pods in the Kubernetes cluster
+
+                // Set current context to the Argo CD namespace (if needed)
+                bat 'kubectl config set-context --current --namespace=argocd'
+                 bat ' C:/Users/lokes/argocd.exe login cd.argoproj.io --core'
+                // Create or update Argo CD application
+                bat 'C:/Users/lokes/argocd.exe app create pipeline --repo https://github.com/lokesh2201013/DevopsProject --path kubeconfig --dest-server https://kubernetes.default.svc --dest-namespace default'
+
+                // Sync Argo CD application
+                bat 'C:/Users/lokes/argocd.exe app sync pipeline'
+
+                // Check pods in the Argo CD namespace
                 bat 'kubectl get pods -n argocd'
+
+                // Check deployments in the default namespace
+                bat 'kubectl get deployments -n default'
 
                 // Send email notification
                 mail to: 'lokeshchoraria60369@gmail.com', subject: 'Build Status', body: 'The build has completed.'
