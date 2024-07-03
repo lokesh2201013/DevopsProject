@@ -99,12 +99,23 @@ pipeline {
 
                 // Check deployments in the default namespace
                 bat 'kubectl get deployments -n default'
-               powershell '''
-                        Start-Process -NoNewWindow -FilePath "kubectl" -ArgumentList "port-forward deployment/pipeline 5173:80 -n default" -PassThru
-                    '''
+              def powershellStatus = powershell script: '''
+                    Start-Process -NoNewWindow -FilePath "kubectl" -ArgumentList "port-forward deployment/pipeline 5173:80 -n default" -PassThru
+                ''', returnStatus: true
+                
+                if (powershellStatus == 0) {
+                    echo "PowerShell command executed successfully."
+                    currentBuild.result = 'SUCCESS'
+                    return
+                } else {
+                    echo "PowerShell command failed."
+                    currentBuild.result = 'FAILURE'
+                    return
+                }
 
                 // Send email notification
                 mail to: 'lokeshchoraria60369@gmail.com', subject: 'Build Status', body: 'The build has completed.'
+                
             }
         }
     }
