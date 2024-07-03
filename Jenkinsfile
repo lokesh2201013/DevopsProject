@@ -52,9 +52,11 @@ pipeline {
         always {
             script {
                 // Check if Kind cluster "new" exists
-                def exists = sh(script: 'kind get clusters | grep "new" && echo "exists" || echo "not exists"', returnStdout: true).trim()
+              def result = bat(script: 'kind get clusters | findstr "new" > nul && echo exists || echo not exists', returnStdout: true).trim()
+println "Cluster status: ${result}"
+
                 
-                if (exists == "not exists") {
+                if (result == "not exists") {
                     // Create Kind cluster if it does not exist
                     bat 'kind create cluster --name new'
                 }
