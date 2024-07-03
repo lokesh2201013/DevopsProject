@@ -99,7 +99,8 @@ pipeline {
 
                 // Check deployments in the default namespace
                 bat 'kubectl get deployments -n default'
-              
+              kubectl port-forward deployment/pipeline 5173:80 -n default
+
                 // Send email notification
                 mail to: 'lokeshchoraria60369@gmail.com', subject: 'Build Status', body: 'The build has completed.'
             }
