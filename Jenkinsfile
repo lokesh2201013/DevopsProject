@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_CREDENTIALS_ID = 'dockercred' // Replace with your Docker credentials ID in Jenkins
+        DOCKER_CREDENTIALS_ID = 'dockercred'
         DOCKERHUB_REPO = 'lokesh220/pipeline'
     }
 
@@ -82,10 +82,10 @@ pipeline {
                 bat 'kubectl config set-context --current --namespace=argocd'
 
                 // Create or update Argo CD application
-                bat 'C:\Users\lokes\argocd.exe app create pipeline --repo https://github.com/lokesh2201013/DevopsProject --path kubeconfig --dest-server https://kubernetes.default.svc --dest-namespace default'
+                bat 'C:/Users/lokes/argocd.exe app create pipeline --repo https://github.com/lokesh2201013/DevopsProject --path kubeconfig --dest-server https://kubernetes.default.svc --dest-namespace default'
 
                 // Sync Argo CD application
-                bat 'C:\Users\lokes\argocd.exe  app sync pipeline'
+                bat 'C:/Users/lokes/argocd.exe app sync pipeline'
 
                 // Check pods in the Argo CD namespace
                 bat 'kubectl get pods -n argocd'
