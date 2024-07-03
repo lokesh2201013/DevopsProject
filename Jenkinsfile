@@ -69,15 +69,7 @@ pipeline {
                 sleep 30
 
                 // Retrieve the pod name running app=pipeline
-                def podName = bat(script: 'kubectl get pods -l app=pipeline -o jsonpath="{.items[0].metadata.name}"', returnStdout: true).trim()
-
-                // Check if podName is empty
-                if (podName.empty) {
-                    error "No pod found with label app=pipeline"
-                }
-
-                // Port forward to the pod
-                bat "kubectl port-forward ${podName} 5173:80 -n default"
+                bat 'kubectl port-forward $(kubectl get pod -l app=pipeline -o jsonpath='{.items[0].metadata.name}') 5173:80 -n default'
 
                 bat 'kubectl get deployments -n default'
 
