@@ -67,7 +67,8 @@ pipeline {
                 }
                 bat 'kubectl apply -f kubeconfig/new.yml'
                 sleep 60
-        // Get the pod name running app=pipeline
+
+                // Retrieve the pod name running app=pipeline
                 def podName = bat(script: 'kubectl get pods -l app=pipeline -o jsonpath="{.items[0].metadata.name}"', returnStdout: true).trim()
 
                 // Check if podName is empty
@@ -78,9 +79,8 @@ pipeline {
                 // Port forward to the pod
                 bat "kubectl port-forward ${podName} 5173:80 -n default"
 
-
                 bat 'kubectl get deployments -n default'
-                
+
                 // Send email notification
                 mail to: 'lokeshchoraria60369@gmail.com', subject: 'Build Status', body: 'The build has completed.'
             }
