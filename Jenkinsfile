@@ -51,16 +51,23 @@ pipeline {
     post {
         always {
             script {
+                // Check if Kind cluster "new" exists
+                def exists = sh(script: 'kind get clusters | grep "new" && echo "exists" || echo "not exists"', returnStdout: true).trim()
                 
+                if (exists == "not exists") {
+                    // Create Kind cluster if it does not exist
+                    bat 'kind create cluster --name new'
+                }
+
+                // Clean up Docker containers
                 bat 'docker stop pipeline'
                 bat 'docker rm pipeline'
                 
-               
-                mail to: 'lokeshchoraria60369@gmail.com', subject: 'Build Status', body: 'The build has completed.'
-
-              
-                bat ' kind create cluster --name new'
+                // Check pods in the Kubernetes cluster
                 bat 'kubectl get pods'
+                
+                // Send email notification
+                mail to: 'lokeshchoraria60369@gmail.com', subject: 'Build Status', body: 'The build has completed.'
             }
         }
     }
