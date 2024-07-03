@@ -21,7 +21,6 @@ pipeline {
                 script {
                     // Tag the Docker image
                     bat "docker tag pipeline ${DOCKERHUB_REPO}:latest"
-
                 }
             }
         }
@@ -39,15 +38,6 @@ pipeline {
             }
         }
 
-      /*  stage('Deploy to Kubernetes') {
-            steps {
-                script {
-                    // Apply Kubernetes configuration
-                    bat "kubectl apply -f new.yml --validate=false"
-                }
-            }
-        }*/
-
         stage('Run Container at port 5173') {
             steps {
                 script {
@@ -61,10 +51,41 @@ pipeline {
     post {
         always {
             script {
-                // Stop and remove Docker container
+                // Check if Kind cluster "new" exists
+                def result = bat(script: 'kind get clusters | findstr "new" > nul && echo exists || echo not exists', returnStatus: true)
+                println "Cluster status: ${result}"
+
+                if (result != 0) {
+                    echo "Kind cluster 'new' does not exist. Creating..."
+                    bat 'kind create cluster --name new'
+                } else {
+                    echo "Kind cluster 'new' exists."
+                }
+
+                // Clean up Docker containers
                 bat 'docker stop pipeline'
                 bat 'docker rm pipeline'
-                
+
+                // Check if the Argo CD namespace exists
+                def argoExists = bat(script: 'kubectl get namespace argocd > nul 2>&1 && echo exists || echo not exists', returnStatus: true)
+                println "Argo CD namespace status: ${argoExists}"
+
+                if (argoExists != 0) {
+                    echo "Argo CD namespace does not exist. Creating..."
+                    bat 'kubectl create namespace argocd'
+                    bat 'kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml'
+                } else {
+                    echo "Argo CD namespace exists."
+                }
+                 def podReady = waitReady('default','app=pipeline' ,10)
+                 if(podReady)
+                 {
+                    echo "Pods present"
+                    bat 'kubectl run ${podname} --image=${DOCKERHUB_REPO} --'
+                 }
+                // Check pods in the Kubernetes cluster
+                bat 'kubectl get pods -n argocd'
+
                 // Send email notification
                 mail to: 'lokeshchoraria60369@gmail.com', subject: 'Build Status', body: 'The build has completed.'
             }
