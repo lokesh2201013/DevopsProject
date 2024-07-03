@@ -61,12 +61,25 @@ pipeline {
                 } else {
                     echo "Kind cluster 'new' exists."
                 }
+
                 // Clean up Docker containers
                 bat 'docker stop pipeline'
                 bat 'docker rm pipeline'
 
+                // Check if the Argo CD namespace exists
+                def argoExists = bat(script: 'kubectl get namespace argocd > nul 2>&1 && echo exists || echo not exists', returnStatus: true)
+                println "Argo CD namespace status: ${argoExists}"
+
+                if (argoExists != 0) {
+                    echo "Argo CD namespace does not exist. Creating..."
+                    bat 'kubectl create namespace argocd'
+                    bat 'kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml'
+                } else {
+                    echo "Argo CD namespace exists."
+                }
+
                 // Check pods in the Kubernetes cluster
-                bat 'kubectl get pods'
+                bat 'kubectl get pods -n argocd'
 
                 // Send email notification
                 mail to: 'lokeshchoraria60369@gmail.com', subject: 'Build Status', body: 'The build has completed.'
