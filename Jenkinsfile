@@ -80,7 +80,7 @@ pipeline {
 
                 // Set current context to the Argo CD namespace (if needed)
                 bat 'kubectl config set-context --current --namespace=argocd'
-
+                 bat ' C:/Users/lokes/argocd.exe login cd.argoproj.io --core'
                 // Create or update Argo CD application
                 bat 'C:/Users/lokes/argocd.exe app create pipeline --repo https://github.com/lokesh2201013/DevopsProject --path kubeconfig --dest-server https://kubernetes.default.svc --dest-namespace default'
 
