@@ -71,7 +71,8 @@ pipeline {
                 sleep time: 30, unit: 'SECONDS'  // Wait for Kubernetes resources to be ready
 
                 // Retrieve the pod name running app=pipeline without using -l flag
-                def podName = bat(script: 'kubectl get pods -o json | jq -r \'.items[] | select(.metadata.labels.app == "pipeline") | .metadata.name\'', returnStdout: true).trim()
+                def podsJson = bat(script: 'kubectl get pods -o json', returnStdout: true).trim()
+                def podName = parsePodNameFromJson(podsJson)
 
                 // Port forward to the pod
                 bat "kubectl port-forward $podName 5173:80 -n default &"
@@ -87,4 +88,11 @@ pipeline {
             }
         }
     }
+}
+
+def parsePodNameFromJson(String podsJson) {
+    def jsonSlurper = new JsonSlurperClassic()
+    def json = jsonSlurper.parseText(podsJson)
+    def podName = json.items.find { it.metadata.labels.app == 'pipeline' }?.metadata.name
+    return podName ?: ''
 }
