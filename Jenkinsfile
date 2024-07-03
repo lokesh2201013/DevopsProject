@@ -66,7 +66,7 @@ pipeline {
                     echo "Kind cluster 'new' exists."
                 }
                 bat 'kubectl apply -f kubeconfig/new.yml'
-                sleep 60
+                sleep 30
 
                 // Retrieve the pod name running app=pipeline
                 def podName = bat(script: 'kubectl get pods -l app=pipeline -o jsonpath="{.items[0].metadata.name}"', returnStdout: true).trim()
