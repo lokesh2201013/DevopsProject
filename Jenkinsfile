@@ -43,20 +43,17 @@ pipeline {
                 script {
                     // Run Docker container
                     bat "docker run -d -p 5173:80 --name pipeline ${DOCKERHUB_REPO}:latest"
+                    bat 'docker stop pipeline'
+                    bat 'docker rm pipeline'
                 }
             }
         }
     }
-
-    post {
-        always {
-            script {
-                // Clean up Docker containers
-                bat 'docker stop pipeline'
-                bat 'docker rm pipeline'
-
-                // Check if Kind cluster "new" exists
-                def result = bat(script: 'kind get clusters | findstr "new" > nul && echo exists || echo not exists', returnStatus: true)
+    stage('Argo cluster configrations')
+    {
+        steps
+        script{
+                    def result = bat(script: 'kind get clusters | findstr "new" > nul && echo exists || echo not exists', returnStatus: true)
                 println "Cluster status: ${result}"
 
                 if (result != 0) {
@@ -74,47 +71,33 @@ pipeline {
                     echo "Argo CD namespace does not exist. Creating..."
                     bat 'kubectl create namespace argocd'
                     bat 'kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml'
+                    sleep 120
+                      bat 'kubectl get pods -n argocd'
+
                 } else {
                     echo "Argo CD namespace exists."
-                }
-                    def podsready=false
-                    def maxtries=30
-                    def retry=60
-                sleep 120
-                 
-               
-                bat 'kubectl config set-context --current --namespace=argocd'
-                 bat ' C:/Users/lokes/argocd.exe login cd.argoproj.io --core'
+                } 
+             bat 'kubectl config set-context --current --namespace=argocd'
+            
+               //login in argo cd
+                bat ' C:/Users/lokes/argocd.exe login cd.argoproj.io --core'
+            
                 // Create or update Argo CD application
                 bat 'C:/Users/lokes/argocd.exe app create pipeline --repo https://github.com/lokesh2201013/DevopsProject --path kubeconfig --dest-server https://kubernetes.default.svc --dest-namespace default'
-               def podsReady = false
-                def maxRetries = 30
-                def retryInterval = 60 // seconds
-
-                // Sync Argo CD application
+            // Sync Argo CD application
                 bat 'C:/Users/lokes/argocd.exe app sync pipeline'
-              
-                bat 'kubectl get pods -n argocd'
-
-                // Check deployments in the default namespace
+                 sleep 30
+             // Check deployments in the default namespace
                 bat 'kubectl get deployments -n default'
-                bat "echo Current directory: && cd"
-
-                 def argoCdPortForwardStatus = powershell script: '''
-                    Start-Process -NoNewWindow -FilePath "kubectl" -ArgumentList "port-forward service/argocd-server 3001:443 -n argocd" -PassThru
-                ''', returnStatus: true
-
-                if (argoCdPortForwardStatus == 0) {
-                    echo "Port forwarding for Argo CD UI started successfully on port 3001."
-                    // Optionally, you can wait for a few seconds to ensure the port forwarding is established
-                    sleep 10
-                } else {
-                    echo "Failed to start port forwarding for Argo CD UI."
-                    currentBuild.result = 'FAILURE'
-                    return
-                }
-                sleep 60
-             def powershellStatus = powershell script: '''
+        }
+    }
+    stage('parellel execution')
+    {
+        parellel
+        {
+            stage('Deploying and port forwarding the app')
+            {
+                 def powershellStatus = powershell script: '''
                     Start-Process -NoNewWindow -FilePath "kubectl" -ArgumentList "port-forward deployment/pipeline 5173:80 -n default" -PassThru
                 ''', returnStatus: true
                 
@@ -127,8 +110,24 @@ pipeline {
                     currentBuild.result = 'FAILURE'
                     return
                 }
-                    
-                // Send email notification
+            }
+            stage('killing the task')
+            { 
+                    // sleep for 30s to see the output 
+                    sleep 30
+                    def taskid = bat(script: 'netstat -ano | findstr "5173"', returnStdout: true).trim()
+                     
+                    // Extract PID from netstat output
+                    def pid = taskid.tokenize()[4]
+
+                    // Kill the process with the extracted PID using taskkill
+                    bat "taskkill /F /PID ${pid}"
+            }
+        }
+    }
+    post {
+        always {
+            script {
                 mail to: 'lokeshchoraria60369@gmail.com', subject: 'Build Status', body: 'The build has completed.'
                 
             }
