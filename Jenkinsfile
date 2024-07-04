@@ -116,8 +116,8 @@ pipeline {
                             sleep 30
 
                             // Find and kill process on port 5173
-                            def taskid = bat(script: 'netstat -ano | findstr "5173"', returnStdout: true).trim()
-                            def pid = taskid.tokenize()[4]
+                             def taskid = bat(script: 'netstat -ano | findstr "5173" | findstr "LISTENING"', returnStdout: true).trim()
+                            def pid = taskid.tokenize().last()
                             bat "taskkill /F /PID ${pid}"
                         }
                     }
