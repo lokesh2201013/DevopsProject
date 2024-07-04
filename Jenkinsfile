@@ -94,7 +94,7 @@ pipeline {
                 // Sync Argo CD application
                 bat 'C:/Users/lokes/argocd.exe app sync pipeline'
                      sleep 60
-                bat 'kubectl apply -f kubeconfig/new.yml'
+                bat 'kubectl apply -f kubeconfig/new.yml -n default'
                 bat 'kubectl get pods -n argocd'
 
                 // Check deployments in the default namespace
