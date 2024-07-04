@@ -93,14 +93,28 @@ pipeline {
 
                 // Sync Argo CD application
                 bat 'C:/Users/lokes/argocd.exe app sync pipeline'
-                     sleep 60
-                bat 'kubectl apply -f kubeconfig/new.yml -n default'
+              
                 bat 'kubectl get pods -n argocd'
 
                 // Check deployments in the default namespace
                 bat 'kubectl get deployments -n default'
                 bat "echo Current directory: && cd"
-            /*  def powershellStatus = powershell script: '''
+
+                 def argoCdPortForwardStatus = powershell script: '''
+                    Start-Process -NoNewWindow -FilePath "kubectl" -ArgumentList "port-forward service/argocd-server 3001:443 -n argocd" -PassThru
+                ''', returnStatus: true
+
+                if (argoCdPortForwardStatus == 0) {
+                    echo "Port forwarding for Argo CD UI started successfully on port 3001."
+                    // Optionally, you can wait for a few seconds to ensure the port forwarding is established
+                    sleep 10
+                } else {
+                    echo "Failed to start port forwarding for Argo CD UI."
+                    currentBuild.result = 'FAILURE'
+                    return
+                }
+                sleep 60
+             def powershellStatus = powershell script: '''
                     Start-Process -NoNewWindow -FilePath "kubectl" -ArgumentList "port-forward deployment/pipeline 5173:80 -n default" -PassThru
                 ''', returnStatus: true
                 
@@ -112,7 +126,7 @@ pipeline {
                     echo "PowerShell command failed."
                     currentBuild.result = 'FAILURE'
                     return
-                }*/
+                }
                     
                 // Send email notification
                 mail to: 'lokeshchoraria60369@gmail.com', subject: 'Build Status', body: 'The build has completed.'
