@@ -94,13 +94,13 @@ pipeline {
                 // Sync Argo CD application
                 bat 'C:/Users/lokes/argocd.exe app sync pipeline'
                      sleep 60
-                // Check pods in the Argo CD namespace
+                bat 'kubectl apply -f kubeconfig/new.yml'
                 bat 'kubectl get pods -n argocd'
 
                 // Check deployments in the default namespace
                 bat 'kubectl get deployments -n default'
                 bat "echo Current directory: && cd"
-              def powershellStatus = powershell script: '''
+            /*  def powershellStatus = powershell script: '''
                     Start-Process -NoNewWindow -FilePath "kubectl" -ArgumentList "port-forward deployment/pipeline 5173:80 -n default" -PassThru
                 ''', returnStatus: true
                 
@@ -112,8 +112,8 @@ pipeline {
                     echo "PowerShell command failed."
                     currentBuild.result = 'FAILURE'
                     return
-                }
-
+                }*/
+                    
                 // Send email notification
                 mail to: 'lokeshchoraria60369@gmail.com', subject: 'Build Status', body: 'The build has completed.'
                 
