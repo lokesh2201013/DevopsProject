@@ -87,7 +87,7 @@ pipeline {
 
                     // Sync Argo CD application
                     bat 'C:/Users/lokes/argocd.exe app sync pipeline'
-
+                      sleep 30
                     // Check deployments in the default namespace
                     bat 'kubectl get deployments -n default'
                 }
